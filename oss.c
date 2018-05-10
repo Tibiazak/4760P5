@@ -356,7 +356,9 @@ int main(int argc, char * argv[]) {
     // loop while we haven't used more than 100 processes or gone over 2 simulated seconds
     while(!hasTimePassed(Clock, endclocktime))
     {
-        printf("Entering main loop.\n");
+        sem_wait(mutex);
+        printf("Current time is: %d:%d\n", Clock->sec, Clock->nsec);
+        sem_post(mutex);
         if (totalprocs == 0)
         {
             printf("Totalprocs is 0\n");
@@ -446,8 +448,8 @@ int main(int argc, char * argv[]) {
             }
             sem_post(mutex);
             nextTime = getNextProcTime(Clock);
+            print("The next clock time to receive a message is %d:%d", nextTime.sec, nextTime.nsec);
         }
-        printf("About to try and receive a message\n");
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, IPC_NOWAIT);
         if (msgerror != -1)
         {

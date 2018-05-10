@@ -145,6 +145,7 @@ int hasTimePassed(struct clock *current, struct clock dest)
 // A function to get a random time between 0 and 500 milliseconds from now
 struct clock getNextProcTime(struct clock *c)
 {
+    printf("Entering getnextproctime\n");
     sem_wait(mutex);
     uint nsecs;
     // get a random number between 1 and 500 milliseconds
@@ -446,7 +447,9 @@ int main(int argc, char * argv[]) {
             //print process creation
             if(linecount < LINELIMIT)
             {
+                sem_wait(mutex);
                 fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+                sem_post(mutex);
                 linecount++;
             }
             sem_wait(mutex);
@@ -457,7 +460,7 @@ int main(int argc, char * argv[]) {
             }
             sem_post(mutex);
             nextTime = getNextProcTime(Clock);
-            printf("The next clock time to receive a message is %d:%d", nextTime.sec, nextTime.nsec);
+            printf("The next clock time to fork a process is %d:%d", nextTime.sec, nextTime.nsec);
         }
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, IPC_NOWAIT);
         if (msgerror != -1)

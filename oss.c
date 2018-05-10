@@ -356,6 +356,7 @@ int main(int argc, char * argv[]) {
         printf("Entering main loop.\n");
         if (totalprocs == 0)
         {
+            printf("Totalprocs is 0\n");
             simpid = 1;
             procarray[1] = 1;
             for (i = 0; i < 20; i++)
@@ -391,6 +392,7 @@ int main(int argc, char * argv[]) {
         }
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
+            printf("Time to launch a new process\n");
             if ((simpid = getSimpid(procarray)) == -1)
             {
                 printf("getSimPid returned error\n");
@@ -429,9 +431,11 @@ int main(int argc, char * argv[]) {
             sem_post(mutex);
             nextTime = getNextProcTime(Clock);
         }
+        printf("About to try and receive a message\n");
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, 1);
         if (msgerror != -1)
         {
+            printf("message received\n");
             // process message
             strcpy(messageString, message.mtext);
             temp = strtok(messageString, " ");

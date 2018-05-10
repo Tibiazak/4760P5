@@ -166,7 +166,6 @@ int main(int argc, char * argv[]) {
     int pr_count = 0;
     int totalprocs = 0;
     char* filename;
-    char* argarray[];
     pid_t wait = 0;
     bool timeElapsed = false;
     char messageString[100];
@@ -341,7 +340,7 @@ int main(int argc, char * argv[]) {
                 proc_max_resources[1][i] = rand() % MAXCLAIM;
             }
 
-            argarray = {"./user", simpid, NULL};
+            char * argarray = {"./user", simpid, NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");
@@ -373,7 +372,7 @@ int main(int argc, char * argv[]) {
                 proc_max_resources[simpid][i] = rand() % MAXCLAIM;
             }
 
-            argarray = {"./user", simpid, NULL};
+            char * argarray = {"./user", simpid, NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");

@@ -80,6 +80,8 @@ static void interrupt(int signo, siginfo_t *info, void *context)
     shmdt(Clock);
     shmctl(ClockID, IPC_RMID, NULL);
     msgctl(MsgID, IPC_RMID, NULL);
+    sem_close(mutex);
+    sem_unlink(SEM_NAME);
     fclose(fp);
     exit(1);
 }
@@ -474,6 +476,8 @@ int main(int argc, char * argv[]) {
     shmctl(ProcTableID, IPC_RMID, NULL);
     msgctl(MsgID, IPC_RMID, NULL);
     fclose(fp);
+    sem_close(mutex);
+    sem_unlink(SEM_NAME);
     signal(SIGUSR1, SIG_IGN);
     kill(-1*getpid(), SIGUSR1);
     while(pr_count > 0)

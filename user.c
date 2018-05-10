@@ -44,6 +44,8 @@
 int ClockID;
 struct clock *Clock;
 int MsgID;
+int TableID;
+
 
 sem_t *mutex;
 
@@ -58,6 +60,8 @@ static void interrupt()
 {
     printf("Received interrupt!\n");
     shmdt(Clock);
+    shmdt(TableID);
+    sem_close(mutex);
     exit(1);
 }
 
@@ -140,7 +144,6 @@ int main(int argc, char *argv[]) {
     int (*proc_table)[20];
     int current_resources[20];
     int simpid = atoi(argv[1]);
-    int TableID;
     int resource;
 
     for (i = 0; i < 20; i++)
@@ -207,6 +210,7 @@ int main(int argc, char *argv[]) {
                 msgrcv(MsgID, &message, sizeof(message), simpid, 0);
                 shmdt(Clock);
                 shmdt(proc_table);
+                sem_close(mutex);
                 exit(0);
             }
         }

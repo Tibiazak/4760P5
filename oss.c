@@ -172,6 +172,7 @@ int getSimpid(int procarray[19])
             return i;
         }
     }
+    return -1;
 }
 
 
@@ -380,7 +381,11 @@ int main(int argc, char * argv[]) {
         }
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
-            simpid = getSimpid(procarray);
+            if ((simpid = getSimpid(procarray)) == -1)
+            {
+                printf("getSimPid returned error\n");
+                exit(1);
+            }
             procarray[simpid] = 1;
             sprintf(strsimpid, "%d", simpid);
             for (i = 0; i < 20; i++)

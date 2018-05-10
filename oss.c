@@ -464,6 +464,7 @@ int main(int argc, char * argv[]) {
         {
             printf("message received from process %i: ", message.mtext);
             printf(message.mtext);
+            printf('\n');
             // process message
             strcpy(messageString, message.mtext);
             temp = strtok(messageString, " ");

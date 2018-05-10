@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     int donensec;
     int (*proc_table)[20];
     int current_resources[20];
-    int simpid = argv[1];
+    int simpid = atoi(argv[1]);
     int TableID;
     bool done = false;
     int resource;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
         current_resources[i] = 0;
     }
 
-    srand(time(getpid())); // seeds the random number generator
+    srand(getpid()); // seeds the random number generator
 
     // gets and attaches shared memory
     ClockID = shmget(SHAREKEY, sizeof(int), 0777);

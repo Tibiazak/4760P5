@@ -467,6 +467,8 @@ int main(int argc, char * argv[]) {
                     fprintf(fp, "Process %d with simpid %ld is terminating.\n", pid, message.mtype);
                     linecount++;
                 }
+                procarray[message.mtype] = 0;
+                totalprocs--;
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }

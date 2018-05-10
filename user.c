@@ -177,8 +177,8 @@ int main(int argc, char *argv[]) {
 //    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);
 //    msgsnd(MsgID, &message, sizeof(message), 0);
 
+    printf("User: About to enter main loop\n");
     while(true) {
-        printf("Main loop!\n");
         if ((rand() % UPPERBOUND) < BOUND) {
             printf("User is doing something!\n");
             // we either request or release resources

@@ -139,6 +139,9 @@ int main(int argc, char *argv[]) {
     int donensec;
     int *proc_table[20];
     int current_resources[20];
+    int simpid;
+    int TableID;
+    bool done = False;
 
     for (i = 0; i < 20; i++)
     {
@@ -167,7 +170,7 @@ int main(int argc, char *argv[]) {
 //    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);
 //    msgsnd(MsgID, &message, sizeof(message), 0);
 
-    while(!done) {
+    while(true) {
         if ((rand() % UPPERBOUND) > BOUND) {
             // we either request or release resources
             //check if resources are full
@@ -199,8 +202,4 @@ int main(int argc, char *argv[]) {
 
         do_work(mutex, Clock);
     }
-
-    // detach shared memory and terminate
-    shmdt(Clock);
-    return 0;
 }

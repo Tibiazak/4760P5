@@ -169,9 +169,6 @@ int main(int argc, char * argv[]) {
     pid_t wait = 0;
     bool timeElapsed = false;
     char messageString[100];
-    int proctime;
-    int procendsec;
-    int procendnsec;
     char* temp;
     int procarray[19];
     int msgerror;
@@ -182,6 +179,7 @@ int main(int argc, char * argv[]) {
     struct clock endclocktime;
     struct clock nextTime;
     int simpid;
+    char* strsimpid;
 
     // Process command line arguments
     if(argc == 1) //if no arguments passed
@@ -340,7 +338,7 @@ int main(int argc, char * argv[]) {
                 proc_max_resources[1][i] = rand() % MAXCLAIM;
             }
 
-            char * argarray[] = {"./user", simpid, NULL};
+            char * argarray[] = {"./user", "1", NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");
@@ -367,12 +365,13 @@ int main(int argc, char * argv[]) {
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
             simpid = getSimpid(procarray);
+            sprintf(strsimpid, "%d", simpid);
             for (i = 0; i < 20; i++)
             {
                 proc_max_resources[simpid][i] = rand() % MAXCLAIM;
             }
 
-            char * argarray[] = {"./user", simpid, NULL};
+            char * argarray[] = {"./user", strsimpid, NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");

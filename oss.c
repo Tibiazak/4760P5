@@ -448,7 +448,7 @@ int main(int argc, char * argv[]) {
             }
             sem_post(mutex);
             nextTime = getNextProcTime(Clock);
-            print("The next clock time to receive a message is %d:%d", nextTime.sec, nextTime.nsec);
+            printf("The next clock time to receive a message is %d:%d", nextTime.sec, nextTime.nsec);
         }
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, IPC_NOWAIT);
         if (msgerror != -1)

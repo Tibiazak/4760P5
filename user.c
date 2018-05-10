@@ -151,6 +151,7 @@ int main(int argc, char *argv[]) {
         current_resources[i] = 0;
     }
 
+    printf("User: My simpid is %i\n", simpid);
     srand(getpid()); // seeds the random number generator
 
     // gets and attaches shared memory

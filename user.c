@@ -136,13 +136,7 @@ void do_work(sem_t * mutex, struct clock * Clock)
 
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, interrupt); // registers interrupt handler
-    unsigned long x;
     int i;
-    int totalwork;
-    int workdone = 0;
-    int work;
-    int donesec;
-    int donensec;
     int (*proc_table)[20];
     int current_resources[20];
     int simpid = atoi(argv[1]);

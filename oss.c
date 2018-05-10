@@ -46,7 +46,7 @@
 #define BILLION 1000000000
 #define PR_LIMIT 17
 #define MAXCLAIM 3
-#define SEM_NAME "/mutex-semaphore"
+#define SEM_NAME "/mutex-semaphore-jbwd4"
 #define MILLISEC 1000000
 #define LINELIMIT 100000
 #define TERMINATE 1

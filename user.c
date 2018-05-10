@@ -35,7 +35,7 @@
 #define SHAREKEY 92195
 #define MSGKEY 110992
 #define TABLEKEY 210995
-#define SEM_NAME "/mutex-semaphore"
+#define SEM_NAME "/mutex-semaphore-jbwd4"
 #define TERMINATE 1
 #define REQUEST 2
 #define RELEASE 3

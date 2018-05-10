@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
     printf("User: About to enter main loop\n");
     while(true)
     {
-        if ((rand() % UPPERBOUND) < BOUND) {
+        if ((rand() % UPPERBOUND) > 0) {
             printf("User is doing something!\n");
             // we either request or release resources
             //check if resources are full

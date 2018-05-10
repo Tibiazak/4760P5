@@ -356,6 +356,10 @@ int main(int argc, char * argv[]) {
     // loop while we haven't used more than 100 processes or gone over 2 simulated seconds
     while(!hasTimePassed(Clock, endclocktime))
     {
+        if (linecount > LINELIMIT)
+        {
+            printf("Line limit reached\n");
+        }
         sem_wait(mutex);
         printf("Current time is: %d:%d\n", Clock->sec, Clock->nsec);
         sem_post(mutex);
@@ -376,7 +380,7 @@ int main(int argc, char * argv[]) {
                 perror("Fork failed!");
                 exit(1);
             }
-            totalprocs++;
+            totalprocs += 1;
             if(pid == 0)
             {
                 if(execvp(argarray[0], argarray) < 0)
@@ -426,7 +430,7 @@ int main(int argc, char * argv[]) {
                 perror("Fork failed!");
                 exit(1);
             }
-            totalprocs++;
+            totalprocs += 1;
             if(pid == 0)
             {
                 if(execvp(argarray[0], argarray) < 0)

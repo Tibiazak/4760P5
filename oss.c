@@ -121,13 +121,13 @@ static int setperiodic(double sec)
 // A function that determines if some target time has passed.
 int hasTimePassed(struct clock *current, struct clock dest)
 {
-    if (dest.sec > current->sec)  // if destination.sec is greater than current.sec, it's definitely later
+    if (dest.sec < current->sec)  // if destination.sec is greater than current.sec, it's definitely later
     {
         return 1;
     }
     else if (dest.sec == current->sec) // otherwise if the seconds are equal, check the nanoseconds
     {
-        if (dest.nsec >= current->nsec) // if destination ns is greater, it's later
+        if (dest.nsec <= current->nsec) // if destination ns is greater, it's later
         {
             return 1;
         }

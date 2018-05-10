@@ -438,7 +438,7 @@ int main(int argc, char * argv[]) {
             nextTime = getNextProcTime(Clock);
         }
         printf("About to try and receive a message\n");
-        msgerror = msgrcv(MsgID, &message, sizeof(message), 0, 1);
+        msgerror = msgrcv(MsgID, &message, sizeof(message), 0, 0);
         if (msgerror != -1)
         {
             printf("message received\n");

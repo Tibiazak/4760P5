@@ -56,8 +56,6 @@ int ProcTableID;
 FILE *fp;
 sem_t *mutex;
 
-struct clock endclocktime;
-
 struct mesg_buf {
     long mtype;
     char mtext[100];
@@ -181,6 +179,8 @@ int main(int argc, char * argv[]) {
     int (*proc_max_resources)[20];
     int resource_table[20];
     int current_resources[20];
+    struct clock endclocktime;
+
 
     // Process command line arguments
     if(argc == 1) //if no arguments passed
@@ -328,7 +328,7 @@ int main(int argc, char * argv[]) {
 
 
     // loop while we haven't used more than 100 processes or gone over 2 simulated seconds
-    while(!hasTimePassed(*Clock, endclocktime))
+    while(!hasTimePassed(Clock, endclocktime))
     {
         if (totalprocs == 0)
         {

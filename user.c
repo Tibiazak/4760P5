@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     Clock = (struct clock *)shmat(ClockID, NULL, 0);
 
     TableID = shmget(TABLEKEY, sizeof(int[19][20]), 0777);
-    proc_table = (int *) shmat(TableID, NULL, 0);
+    proc_table = (int *[20]) shmat(TableID, NULL, 0);
 
     // gets the message queue
     MsgID = msgget(MSGKEY, 0666);
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
         if ((rand() % UPPERBOUND) > BOUND) {
             // we either request or release resources
             //check if resources are full
-            if (max_resources()) {
+            if (max_resources(proc_table, current_resources, simpid)) {
                 choose_resource_to_release(current_resources);
                 // release the resource
             } else if (no_resources()) {

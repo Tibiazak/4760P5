@@ -26,6 +26,13 @@
 #include "clock.c"
 
 #define BILLION 1000000000
+#define BOUND 2
+#define UPPERBOUND 3
+#define TERMINATION 1
+#define WORKCONSTANT 100
+#define SHAREKEY 92195
+#define MSGKEY 110992
+#define TABLEKEY 210995
 
 int ClockID;
 struct clock *Clock;
@@ -46,81 +53,164 @@ static void interrupt()
 }
 
 
+int max_resources(int table[19][20], int current_resources[20], int simpid)
+{
+    for(i = 0; i < 20; i++)
+    {
+        if (table[simpid][i] != current_resources[i])
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
+int no_resources(int current_resources[20])
+{
+    for(i = 0; i < 20; i++)
+    {
+        if(current_resources[i] > 0)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
+int choose_resource_to_release(int current_resources[20])
+{
+    int test;
+    while(true)
+    {
+        test = rand() % 20;
+        if (current_resources[test] > 0)
+        {
+            return test;
+        }
+    }
+}
+
+
+int choose_resource_to_request(int table[19][20], int current_resources[20], int simpid)
+{
+    int test;
+    while(true)
+    {
+        test = rand() % 20;
+        if(current_resources[test] < table[simpid][test])
+        {
+            return test;
+        }
+    }
+}
+
+
+void do_work()
+{
+    // access the clock, increment by WORKCONSTANT
+}
+
+
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, interrupt); // registers interrupt handler
-    int sharekey = atoi(argv[1]);
-    int msgkey = atoi(argv[2]);
     unsigned long x;
     int totalwork;
     int workdone = 0;
     int work;
     int donesec;
     int donensec;
+    int *proc_table[20];
 
-    srand(time(0)); // seeds the random number generator
+    srand(time(getpid())); // seeds the random number generator
 
     // gets and attaches shared memory
-    ClockID = shmget(sharekey, sizeof(int), 0777);
+    ClockID = shmget(SHAREKEY, sizeof(int), 0777);
     Clock = (struct clock *)shmat(ClockID, NULL, 0);
 
+    TableID = shmget(TABLEKEY, sizeof(int[19][20]), 0777);
+    proc_table = shmat(TableID, NULL, 0);
+
     // gets the message queue
-    MsgID = msgget(msgkey, 0666);
+    MsgID = msgget(MSGKEY, 0666);
 
-    // The following 4 lines are taken from stackoverflow
-    // https://stackoverflow.com/questions/19870276/generate-a-random-number-from-0-to-10000000
-    // Solution to have a random number larger than MAX_RAND
-    x = rand();
-    x <<= 15;
-    x ^= rand();
-    x %= 1000001;
+//    // main loop: while we still have work to do, loop.
+//    // wait til we can get in the critical section
+//    // once in, generate a random amount of work done, and add it to the clock.
+//    // If we generate more work than the total we're supposed to do, only do up to totalwork
+//    // send a message to the queue allowing another process to get in.
+//    while(workdone < totalwork)
+//    {
+//        // get permission to enter the critical section
+//        msgrcv(MsgID, &message, sizeof(message), 3, 0);
+//
+//        // generate a random amount of work to do this iteration and ensure its not too much work.
+//        work = rand();
+//        if((work + workdone) > totalwork)
+//        {
+//            work = totalwork - workdone;
+//        }
+//
+//        // add the work we're doing to the clock.
+//        Clock->nsec += work;
+//
+//        // if we have a billion nanoseconds, convert to seconds
+//        if(Clock->nsec >= BILLION)
+//        {
+//            Clock->sec++;
+//            Clock->nsec -= BILLION;
+//        }
+//
+//        // add the work we just did to our total work done
+//        workdone += work;
+//
+//        // save the current clock time (so we have it when we terminate)
+//        donensec = Clock->nsec;
+//        donesec = Clock->sec;
+//
+//        // send a message allowing another process to enter the critical section
+//        message.mtype = 3;
+//        msgsnd(MsgID, &message, sizeof(message), 0);
+//    }
+//
+//    // send the terminating message to OSS
+//    message.mtype = 2;
+//    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);
+//    msgsnd(MsgID, &message, sizeof(message), 0);
 
-    // casts the random number to an int from a long
-    // totalwork is the amount of work the program is going to do overall.
-    totalwork = (int) x;
+    while(!done) {
+        if ((rand() % UPPERBOUND) > BOUND) {
+            // we either request or release resources
+            //check if resources are full
+            if (max_resources()) {
+                choose_resource_to_release();
+                // release the resource
+            } else if (no_resources()) {
+                choose_resource_to_request();
+                // request the resource
+            } else {
+                if ((rand() % 2) == 0) {
+                    // request a resource
+                    choose_resource_to_request();
 
-    // main loop: while we still have work to do, loop.
-    // wait til we can get in the critical section
-    // once in, generate a random amount of work done, and add it to the clock.
-    // If we generate more work than the total we're supposed to do, only do up to totalwork
-    // send a message to the queue allowing another process to get in.
-    while(workdone < totalwork)
-    {
-        // get permission to enter the critical section
-        msgrcv(MsgID, &message, sizeof(message), 3, 0);
+                } else {
+                    // release a resource
+                    choose_resource_to_release();
+                }
+            }
 
-        // generate a random amount of work to do this iteration and ensure its not too much work.
-        work = rand();
-        if((work + workdone) > totalwork)
-        {
-            work = totalwork - workdone;
+            // at this point our request was granted, check for termination
+            if ((rand() % 100) == TERMINATION) {
+                //send termination signal
+                shmdt(Clock);
+                shmdt(proc_table);
+                exit(0);
+            }
         }
 
-        // add the work we're doing to the clock.
-        Clock->nsec += work;
-
-        // if we have a billion nanoseconds, convert to seconds
-        if(Clock->nsec >= BILLION)
-        {
-            Clock->sec++;
-            Clock->nsec -= BILLION;
-        }
-
-        // add the work we just did to our total work done
-        workdone += work;
-
-        // save the current clock time (so we have it when we terminate)
-        donensec = Clock->nsec;
-        donesec = Clock->sec;
-
-        // send a message allowing another process to enter the critical section
-        message.mtype = 3;
-        msgsnd(MsgID, &message, sizeof(message), 0);
+        do_work();
     }
-
-    // send the terminating message to OSS
-    message.mtype = 2;
-    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);
-    msgsnd(MsgID, &message, sizeof(message), 0);
 
     // detach shared memory and terminate
     shmdt(Clock);

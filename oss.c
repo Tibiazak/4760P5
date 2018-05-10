@@ -38,18 +38,21 @@
 
 
 #define SHAREKEY 92195
-#define SHAREKEYSTR "92195"
 #define TIMER_MSG "Received timer interrupt!\n"
 #define MSGKEY 110992
-#define MSGKEYSTR "110992"
+#define TABLEKEY 210995
 #define BILLION 1000000000
 #define PR_LIMIT 17
+#define MAXCLAIM 3
 
 // Declare some global variables so that shared memory can be cleaned from the interrupt handler
 int ClockID;
 struct clock *Clock;
 int MsgID;
+int ProcTableID;
 FILE *fp;
+
+struct clock endclocktime;
 
 struct mesg_buf {
     long mtype;
@@ -109,14 +112,57 @@ static int setperiodic(double sec)
 }
 
 
+// A function that determines if some target time has passed.
+int hasTimePassed(struct clock current, struct clock dest)
+{
+    if (dest.sec > current.sec)  // if destination.sec is greater than current.sec, it's definitely later
+    {
+        return 1;
+    }
+    else if (dest.sec == current.sec) // otherwise if the seconds are equal, check the nanoseconds
+    {
+        if (dest.nsec >= current.nsec) // if destination ns is greater, it's later
+        {
+            return 1;
+        }
+    }
+    return 0;  // otherwise, time has not passed, return false
+}
+
+
+// A function to get a random time between 0 and 500 milliseconds from now
+struct clock getNextProcTime(struct clock c)
+{
+    // get a random number between 1 and 500 milliseconds
+    nsecs = (rand() % (500 * MILLISEC)) + 1;
+
+    // make a new clock object initialized to the current time
+    struct clock newClock;
+    newClock.nsec = c.nsec;
+    newClock.sec = c.sec;
+
+    // if adding the randomly generated amount of time causes us to move to the next second, increment sec
+    if ((newClock.nsec + nsecs) >= BILLION)
+    {
+        newClock.sec = newClock.sec + 1;
+        newClock.nsec = nsecs - BILLION;
+    }
+    else // otherwise, just add to nsec
+    {
+        newClock.nsec = newClock.nsec + nsecs;
+    }
+    return newClock; // return the new clock object
+}
+
+
 int main(int argc, char * argv[]) {
     int i, pid, c, status;
     int maxprocs = 5;
     int endtime = 20;
     int pr_count = 0;
     int totalprocs = 0;
-    char* argarray[] = {"./user", SHAREKEYSTR, MSGKEYSTR, NULL};
     char* filename;
+    char* argarray;
     pid_t wait = 0;
     bool timeElapsed = false;
     char messageString[100];
@@ -124,6 +170,12 @@ int main(int argc, char * argv[]) {
     int procendsec;
     int procendnsec;
     char* temp;
+    int procarray[19];
+    int msgerror;
+    int allocation_table[19][20];
+    int *proc_max_resources[20];
+    int resource_table[20];
+    int current_resources[20];
 
     // Process command line arguments
     if(argc == 1) //if no arguments passed
@@ -206,6 +258,8 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
+    endclocktime.nsec = 0;
+    endclocktime.sec = 2;
 
     // Allocate & attach shared memory for the clock
     ClockID = shmget(SHAREKEY, sizeof(int), 0777 | IPC_CREAT);
@@ -222,6 +276,35 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 
+    ProcTableID = shmget(TABLEKEY, sizeof(int[19][20]), 0777 | IPC_CREAT);
+    if(ProcTableID == -1)
+    {
+        perror("Master shmget ProcTable");
+        exit(1);
+    }
+
+    proc_max_resources = shmat(ProcTableID, 0, 0);
+
+    for (i = 0; i < 20; i++)
+    {
+        resource_table[i] = (rand() % 10) + 1;
+    }
+
+    for (i = 0; i < 20; i++)
+    {
+        current_resources[i] = resource_table[i];
+        for (j = 0; j < 19; j++)
+        {
+            allocation_table[j][i] = 0;
+            proc_max_resources[j][i] = 0;
+        }
+    }
+
+    for(i = 0; i < 19; i++)
+    {
+        procarray[i] = 0;
+    }
+
     // initialize the clock
     Clock->sec = 0;
     Clock->nsec = 0;
@@ -229,99 +312,105 @@ int main(int argc, char * argv[]) {
     // Create the message queue
     MsgID = msgget(MSGKEY, 0666 | IPC_CREAT);
 
-    message.mtype = 3; // Allows a process to enter the critical section
-
     // open file
     fp = fopen(filename, "w");
 
-    // Fork processes
-    for (i = 0; i < maxprocs; i++)
-    {
-        pid = fork();
-        pr_count++;
-        totalprocs++;
-        if(pid == 0)
-        {
-            if(execvp(argarray[0], argarray) < 0) //execute user
-            {
-                printf("Execution failed!\n");
-                return 1;
-            }
-        } else if(pid < 0) {
-            printf("Fork failed!\n");
-            return 1;
-        }
-        // output process creation to file
-        fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
-    }
-
-    msgsnd(MsgID, &message, sizeof(message), 0); // send the mutex signal
-
 
     // loop while we haven't used more than 100 processes or gone over 2 simulated seconds
-    while(totalprocs < 101 && !timeElapsed)
+    while(!hasTimePassed(*Clock, endclocktime))
     {
-        // wait for a child to terminate and receive its message
-        msgrcv(MsgID, &message, sizeof(message), 2, 0);
-
-        // process the message
-        strcpy(messageString, message.mtext);
-        temp = strtok(messageString, " ");
-        pid = atoi(temp);
-        temp = strtok(NULL, " ");
-        procendsec = atoi(temp);
-        temp = strtok(NULL, " ");
-        procendnsec = atoi(temp);
-        temp = strtok(NULL, " ");
-        proctime = atoi(temp);
-
-        // print processed message to file
-        fprintf(fp, "Master: Child %d terminating at my time %d.%d, because it reached %d.%d, which lived for %d nanoseconds\n",
-                pid, Clock->sec, Clock->nsec, procendsec, procendnsec, proctime);
-
-        waitpid(pid, &status, 0);
-
-        // request entry to critical section
-        msgrcv(MsgID, &message, sizeof(message), 3, 0);
-
-        // increment clock and ensure it is accurate and not over 2 seconds
-        Clock->nsec += 100;
-        if (Clock->nsec > BILLION)
+        if (totalprocs == 0)
         {
-            Clock->sec++;
-            Clock->nsec -= BILLION;
-        }
-        if (Clock->sec >= 2)
-        {
-            timeElapsed = true;
-        }
-
-        // Prepare another mutex message and fork a new process
-        message.mtype = 3;
-        pid = fork();
-        totalprocs++;
-        if(pid == 0)
-        {
-            if(execvp(argarray[0], argarray) < 0)
+            simpid = 1;
+            procarray[1] = 1;
+            for (i = 0; i < 20; i++)
             {
-                printf("Execution failed!\n");
-                return 1;
+                proc_max_resources[1][i] = rand() % MAXCLAIM;
             }
-        } else if(pid < 0){
-            printf("Fork failed!\n");
-            return 1;
-        }
-        //print process creation
-        fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
 
-        // send mutex message
-        msgsnd(MsgID, &message, sizeof(message), 0);
+            argarray = {"./user", simpid, NULL};
+            if ((pid = fork()) < 0)
+            {
+                perror("Fork failed!");
+                exit(1);
+            }
+            totalprocs++;
+            if(pid == 0)
+            {
+                if(execvp(argarray[0], argarray) < 0)
+                {
+                    printf("Execution failed!\n");
+                    return 1;
+                }
+            }
+            //print process creation
+            fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            if (Clock->nsec + 100 > BILLION)
+            {
+                Clock->sec++;
+                Clock->nsec = Clock->nsec + 100 - BILLION;
+            }
+        }
+        if (hasTimePassed(*Clock, nextTime) && (totalprocs < 18))
+        {
+            simpid = getSimpid(procarray);
+            for (i = 0; i < 20; i++)
+            {
+                proc_max_resources[simpid][i] = rand() % MAXCLAIM;
+            }
+
+            argarray = {"./user", simpid, NULL};
+            if ((pid = fork()) < 0)
+            {
+                perror("Fork failed!");
+                exit(1);
+            }
+            totalprocs++;
+            if(pid == 0)
+            {
+                if(execvp(argarray[0], argarray) < 0)
+                {
+                    printf("Execution failed!\n");
+                    return 1;
+                }
+            }
+            //print process creation
+            fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            if (Clock->nsec + 100 > BILLION)
+            {
+                Clock->sec++;
+                Clock->nsec = Clock->nsec + 100 - BILLION;
+            }
+        }
+        msgerror = msgrcv(&MsgID, &message, sizeof(message), 0, 1);
+        if (msgerror != -1)
+        {
+            // process message
+        }
     }
+//        // process the message
+//        strcpy(messageString, message.mtext);
+//        temp = strtok(messageString, " ");
+//        pid = atoi(temp);
+//        temp = strtok(NULL, " ");
+//        procendsec = atoi(temp);
+//        temp = strtok(NULL, " ");
+//        procendnsec = atoi(temp);
+//        temp = strtok(NULL, " ");
+//        proctime = atoi(temp);
+//
+//        // print processed message to file
+//        fprintf(fp, "Master: Child %d terminating at my time %d.%d, because it reached %d.%d, which lived for %d nanoseconds\n",
+//                pid, Clock->sec, Clock->nsec, procendsec, procendnsec, proctime);
+//
+//        waitpid(pid, &status, 0);
 
     // we're done, detach and free shared memory and close the file
     // then send a kill signal to the children and wait for them to exit
     shmdt(Clock);
+    shmdt(proc_max_resources);
     shmctl(ClockID, IPC_RMID, NULL);
+    shmctl(ProcTableID, IPC_RMID, NULL);
     msgctl(MsgID, IPC_RMID, NULL);
     fclose(fp);
     signal(SIGUSR1, SIG_IGN);

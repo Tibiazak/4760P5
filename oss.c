@@ -346,6 +346,7 @@ int main(int argc, char * argv[]) {
     // loop while we haven't used more than 100 processes or gone over 2 simulated seconds
     while(!hasTimePassed(Clock, endclocktime))
     {
+        printf("Entering main loop.\n");
         if (totalprocs == 0)
         {
             simpid = 1;

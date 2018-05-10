@@ -473,7 +473,7 @@ int main(int argc, char * argv[]) {
                     linecount++;
                 }
                 procarray[message.mtype] = 0;
-                totalprocs--;
+                totalprocs -= 1;
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }

@@ -359,6 +359,7 @@ int main(int argc, char * argv[]) {
         sem_wait(mutex);
         printf("Current time is: %d:%d\n", Clock->sec, Clock->nsec);
         sem_post(mutex);
+        printf("Next process at: %d:%d\n", nextTime.sec, nextTime.nsec);
         if (totalprocs == 0)
         {
             printf("Totalprocs is 0\n");

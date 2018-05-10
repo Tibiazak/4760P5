@@ -36,6 +36,7 @@
 #include "clock.c"
 #include <stdbool.h>
 #include <semaphore.h>
+#include <fcntl.h>
 
 
 #define SHAREKEY 92195
@@ -141,8 +142,8 @@ struct clock getNextProcTime(struct clock *c)
 
     // make a new clock object initialized to the current time
     struct clock newClock;
-    newClock.nsec = c.nsec;
-    newClock.sec = c.sec;
+    newClock.nsec = c->nsec;
+    newClock.sec = c->sec;
 
     // if adding the randomly generated amount of time causes us to move to the next second, increment sec
     if ((newClock.nsec + nsecs) >= BILLION)
@@ -159,13 +160,13 @@ struct clock getNextProcTime(struct clock *c)
 
 
 int main(int argc, char * argv[]) {
-    int i, pid, c, status;
+    int i, j, pid, c, status;
     int maxprocs = 5;
     int endtime = 20;
     int pr_count = 0;
     int totalprocs = 0;
     char* filename;
-    char* argarray;
+    char* argarray[];
     pid_t wait = 0;
     bool timeElapsed = false;
     char messageString[100];
@@ -180,7 +181,8 @@ int main(int argc, char * argv[]) {
     int resource_table[20];
     int current_resources[20];
     struct clock endclocktime;
-
+    struct clock nextTime;
+    int simpid;
 
     // Process command line arguments
     if(argc == 1) //if no arguments passed
@@ -361,6 +363,7 @@ int main(int argc, char * argv[]) {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
+            nextTime = getNextProcTime(Clock);
         }
         if (hasTimePassed(*Clock, nextTime) && (totalprocs < 18))
         {
@@ -392,8 +395,9 @@ int main(int argc, char * argv[]) {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
+            nextTime = getNextProcTime(Clock);
         }
-        msgerror = msgrcv(&MsgID, &message, sizeof(message), 0, 1);
+        msgerror = msgrcv(MsgID, &message, sizeof(message), 0, 1);
         if (msgerror != -1)
         {
             // process message

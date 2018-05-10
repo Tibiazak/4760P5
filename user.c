@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
                 }
             }
             msgsnd(MsgID, &message, sizeof(message), 0);
-            msgrcv(MsgID, &message, sizeof(message), simpid, 1);
+            msgrcv(MsgID, &message, sizeof(message), simpid, 0);
 
 
             // at this point our request was granted, check for termination
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
                 message.mtype = simpid;
                 sprintf(message.mtext, "%d %d", getpid(), TERMINATE);
                 msgsnd(MsgID, &message, sizeof(message), 0);
-                msgrcv(MsgID, &message, sizeof(message), simpid, 1);
+                msgrcv(MsgID, &message, sizeof(message), simpid, 0);
                 shmdt(Clock);
                 shmdt(proc_table);
                 exit(0);

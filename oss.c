@@ -124,6 +124,7 @@ static int setperiodic(double sec)
 // A function that determines if some target time has passed.
 int hasTimePassed(struct clock *current, struct clock dest)
 {
+    sem_wait(mutex);
     if (dest.sec < current->sec)  // if destination.sec is greater than current.sec, it's definitely later
     {
         return 1;
@@ -135,6 +136,7 @@ int hasTimePassed(struct clock *current, struct clock dest)
             return 1;
         }
     }
+    sem_post(mutex);
     return 0;  // otherwise, time has not passed, return false
 }
 
@@ -142,6 +144,7 @@ int hasTimePassed(struct clock *current, struct clock dest)
 // A function to get a random time between 0 and 500 milliseconds from now
 struct clock getNextProcTime(struct clock *c)
 {
+    sem_wait(mutex);
     uint nsecs;
     // get a random number between 1 and 500 milliseconds
     nsecs = (rand() % (500 * MILLISEC)) + 1;
@@ -150,6 +153,7 @@ struct clock getNextProcTime(struct clock *c)
     struct clock newClock;
     newClock.nsec = c->nsec;
     newClock.sec = c->sec;
+    sem_post(mutex);
 
     // if adding the randomly generated amount of time causes us to move to the next second, increment sec
     if ((newClock.nsec + nsecs) >= BILLION)
@@ -376,12 +380,14 @@ int main(int argc, char * argv[]) {
             }
             //print process creation
             fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            sem_wait(mutex);
             if (Clock->nsec + 100 > BILLION)
             {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
             nextTime = getNextProcTime(Clock);
+            sem_post(mutex);
         }
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
@@ -414,11 +420,13 @@ int main(int argc, char * argv[]) {
             }
             //print process creation
             fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            sem_wait(mutex);
             if (Clock->nsec + 100 > BILLION)
             {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
+            sem_post(mutex);
             nextTime = getNextProcTime(Clock);
         }
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, 1);
@@ -432,7 +440,7 @@ int main(int argc, char * argv[]) {
             info = atoi(temp);
             if (info == TERMINATE)
             {
-                printf("Process %d with simpid %ld is terminating.\n", pid, message.mtype);
+                fprintf(fp, "Process %d with simpid %ld is terminating.\n", pid, message.mtype);
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }
@@ -442,11 +450,11 @@ int main(int argc, char * argv[]) {
                 resource = atoi(temp);
                 if (info == REQUEST)
                 {
-                    printf("Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
+                    printf(fp, "Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
                 }
                 else
                 {
-                    printf("Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
+                    printf(fp, "Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
                 }
                 msgsnd(MsgID, &message, sizeof(message), 0);
             }

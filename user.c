@@ -134,6 +134,7 @@ void do_work(sem_t * mutex, struct clock * Clock)
     {
         Clock->nsec += WORKCONSTANT;
     }
+    sem_post(mutex);
 }
 
 
@@ -174,6 +175,7 @@ int main(int argc, char *argv[]) {
 
     while(true) {
         if ((rand() % UPPERBOUND) > BOUND) {
+            printf("User is doing something!\n");
             // we either request or release resources
             //check if resources are full
             message.mtype = simpid;
@@ -196,12 +198,16 @@ int main(int argc, char *argv[]) {
                     sprintf(message.mtext, "%d %d %d", getpid(), RELEASE, resource);
                 }
             }
+            printf("User sending message\n");
             msgsnd(MsgID, &message, sizeof(message), 0);
+            printf("User about to wait for a message\n");
             msgrcv(MsgID, &message, sizeof(message), simpid, 0);
+            printf("Message received, continuing.\n");
 
 
             // at this point our request was granted, check for termination
             if ((rand() % 100) == TERMINATIONCONSTANT) {
+                printf("Time to terminate\n");
                 //send termination signal
                 message.mtype = simpid;
                 sprintf(message.mtext, "%d %d", getpid(), TERMINATE);

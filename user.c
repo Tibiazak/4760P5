@@ -163,11 +163,15 @@ int main(int argc, char *argv[]) {
     // gets the message queue
     MsgID = msgget(MSGKEY, 0666);
 
+    printf("User attempting to attach to the semaphore\n");
+
     if((mutex = sem_open(SEM_NAME, 0)) == SEM_FAILED)
     {
         perror("user sem_open");
         exit(1);
     }
+
+    printf("Got the semaphore\n");
 
 //    message.mtype = 2;
 //    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);

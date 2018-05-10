@@ -47,7 +47,7 @@ int MsgID;
 int TableID;
 
 
-sem_t *mutex;
+sem_t *sem_for_mutex;
 
 struct mesg_buf {
     long mtype;
@@ -60,7 +60,7 @@ static void interrupt()
 {
     printf("Received interrupt!\n");
     shmdt(Clock);
-    sem_close(mutex);
+    sem_close(sem_for_mutex);
     exit(1);
 }
 
@@ -124,7 +124,7 @@ int choose_resource_to_request(int table[19][20], int current_resources[20], int
 void do_work()
 {
     // access the clock, increment by WORKCONSTANT
-    sem_wait(mutex);
+    sem_wait(sem_for_mutex);
     if((Clock->nsec + WORKCONSTANT) >= BILLION)
     {
         Clock->sec++;
@@ -134,7 +134,7 @@ void do_work()
     {
         Clock->nsec += WORKCONSTANT;
     }
-    sem_post(mutex);
+    sem_post(sem_for_mutex);
 }
 
 
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 
     printf("User attempting to attach to the semaphore\n");
 
-    if((mutex = sem_open(SEM_NAME, 0)) == SEM_FAILED)
+    if((sem_for_mutex = sem_open(SEM_NAME, 0)) == SEM_FAILED)
     {
         perror("user sem_open");
         exit(1);
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) {
                 msgrcv(MsgID, &message, sizeof(message), simpid, 0);
                 shmdt(Clock);
                 shmdt(proc_table);
-                sem_close(mutex);
+                sem_close(sem_for_mutex);
                 exit(0);
             }
         }

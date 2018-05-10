@@ -59,7 +59,7 @@ struct clock *Clock;
 int MsgID;
 int ProcTableID;
 FILE *fp;
-sem_t *mutex;
+sem_t *sem_for_mutex;
 
 struct mesg_buf {
     long mtype;
@@ -81,7 +81,7 @@ static void interrupt(int signo, siginfo_t *info, void *context)
     shmdt(Clock);
     shmctl(ClockID, IPC_RMID, NULL);
     msgctl(MsgID, IPC_RMID, NULL);
-    sem_close(mutex);
+    sem_close(sem_for_mutex);
     sem_unlink(SEM_NAME);
     shmctl(ProcTableID, IPC_RMID, NULL);
     fclose(fp);
@@ -125,7 +125,7 @@ static int setperiodic(double sec)
 // A function that determines if some target time has passed.
 int hasTimePassed(struct clock *current, struct clock dest)
 {
-    sem_wait(mutex);
+    sem_wait(sem_for_mutex);
     if (dest.sec < current->sec)  // if destination.sec is greater than current.sec, it's definitely later
     {
         return 1;
@@ -137,7 +137,7 @@ int hasTimePassed(struct clock *current, struct clock dest)
             return 1;
         }
     }
-    sem_post(mutex);
+    sem_post(sem_for_mutex);
     return 0;  // otherwise, time has not passed, return false
 }
 
@@ -146,7 +146,7 @@ int hasTimePassed(struct clock *current, struct clock dest)
 struct clock getNextProcTime(struct clock *c)
 {
     printf("Entering getnextproctime\n");
-    sem_wait(mutex);
+    sem_wait(sem_for_mutex);
     uint nsecs;
     // get a random number between 1 and 500 milliseconds
     nsecs = (rand() % (500 * MILLISEC)) + 1;
@@ -155,7 +155,7 @@ struct clock getNextProcTime(struct clock *c)
     struct clock newClock;
     newClock.nsec = c->nsec;
     newClock.sec = c->sec;
-    sem_post(mutex);
+    sem_post(sem_for_mutex);
 
     // if adding the randomly generated amount of time causes us to move to the next second, increment sec
     if ((newClock.nsec + nsecs) >= BILLION)
@@ -316,7 +316,7 @@ int main(int argc, char * argv[]) {
 
     proc_max_resources = shmat(ProcTableID, 0, 0);
 
-    if ((mutex = sem_open(SEM_NAME, O_CREAT, 0660, 1)) == SEM_FAILED)
+    if ((sem_for_mutex = sem_open(SEM_NAME, O_CREAT, 0660, 1)) == SEM_FAILED)
     {
         perror("Sem_open");
         exit(1);
@@ -361,9 +361,9 @@ int main(int argc, char * argv[]) {
         {
             printf("Line limit reached\n");
         }
-//        sem_wait(mutex);
+//        sem_wait(sem_for_mutex);
 //        printf("Current time is: %d:%d\n", Clock->sec, Clock->nsec);
-//        sem_post(mutex);
+//        sem_post(sem_for_mutex);
 //        printf("Next process at: %d:%d\n", nextTime.sec, nextTime.nsec);
         if (totalprocs == 0)
         {
@@ -397,7 +397,7 @@ int main(int argc, char * argv[]) {
                 fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
                 linecount++;
             }
-            sem_wait(mutex);
+            sem_wait(sem_for_mutex);
             printf("inside critical section of totalprocs == 0\n");
             if (Clock->nsec + 100 > BILLION)
             {
@@ -408,7 +408,7 @@ int main(int argc, char * argv[]) {
             {
                 Clock->nsec = Clock->nsec + 100;
             }
-            sem_post(mutex);
+            sem_post(sem_for_mutex);
             nextTime = getNextProcTime(Clock);
         }
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
@@ -448,22 +448,22 @@ int main(int argc, char * argv[]) {
             if(linecount < LINELIMIT)
             {
                 printf("Linecount < LINELIMIT, about to enter critical section\n");
-                sem_wait(mutex);
+                sem_wait(sem_for_mutex);
                 printf("in critical section\n");
                 fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
                 printf("About to leave critical section\n");
-                sem_post(mutex);
+                sem_post(sem_for_mutex);
                 linecount++;
             }
             printf("About to enter critical section to increment clock\n");
-            sem_wait(mutex);
+            sem_wait(sem_for_mutex);
             if (Clock->nsec + 100 > BILLION)
             {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
             printf("leaving critical section\n");
-            sem_post(mutex);
+            sem_post(sem_for_mutex);
             nextTime = getNextProcTime(Clock);
             printf("The next clock time to fork a process is %d:%d", nextTime.sec, nextTime.nsec);
         }
@@ -536,7 +536,7 @@ int main(int argc, char * argv[]) {
     shmctl(ProcTableID, IPC_RMID, NULL);
     msgctl(MsgID, IPC_RMID, NULL);
     fclose(fp);
-    sem_close(mutex);
+    sem_close(sem_for_mutex);
     sem_unlink(SEM_NAME);
     signal(SIGUSR1, SIG_IGN);
     kill(-1*getpid(), SIGUSR1);

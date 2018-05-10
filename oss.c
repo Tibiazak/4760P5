@@ -424,6 +424,8 @@ int main(int argc, char * argv[]) {
             if (info == TERMINATE)
             {
                 printf("Process %d with simpid %d is terminating.\n", pid, message.mtype);
+                msgsnd(MsgID, &message, sizeof(message), 0);
+                waitpid(pid, &status, 0);
             }
             else
             {
@@ -437,6 +439,7 @@ int main(int argc, char * argv[]) {
                 {
                     printf("Process %d with simpid %d is releasing resource %d\n", pid, message.mtype, resource);
                 }
+                msgsnd(MsgID, &message, sizeof(message), 0);
             }
         }
     }

@@ -450,11 +450,11 @@ int main(int argc, char * argv[]) {
                 resource = atoi(temp);
                 if (info == REQUEST)
                 {
-                    printf(fp, "Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
+                    fprintf(fp, "Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
                 }
                 else
                 {
-                    printf(fp, "Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
+                    fprintf(fp, "Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
                 }
                 msgsnd(MsgID, &message, sizeof(message), 0);
             }

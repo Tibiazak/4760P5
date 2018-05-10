@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     int donensec;
     int (*proc_table)[20];
     int current_resources[20];
-    int simpid;
+    int simpid = argv[1];
     int TableID;
     bool done = false;
 

@@ -82,6 +82,7 @@ static void interrupt(int signo, siginfo_t *info, void *context)
     msgctl(MsgID, IPC_RMID, NULL);
     sem_close(mutex);
     sem_unlink(SEM_NAME);
+    shmctl(ProcTableID, IPC_RMID, NULL);
     fclose(fp);
     exit(1);
 }

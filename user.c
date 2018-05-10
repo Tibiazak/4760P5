@@ -174,6 +174,7 @@ int main(int argc, char *argv[]) {
 //    msgsnd(MsgID, &message, sizeof(message), 0);
 
     while(true) {
+        printf("Main loop!\n");
         if ((rand() % UPPERBOUND) > BOUND) {
             printf("User is doing something!\n");
             // we either request or release resources

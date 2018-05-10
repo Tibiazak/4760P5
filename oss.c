@@ -205,7 +205,7 @@ int main(int argc, char * argv[]) {
     struct clock endclocktime;
     struct clock nextTime;
     int simpid;
-    char* strsimpid;
+    char strsimpid[5];
 
     // Process command line arguments
     if(argc == 1) //if no arguments passed
@@ -421,7 +421,7 @@ int main(int argc, char * argv[]) {
             printf("Made it through getSimpid\n");
             procarray[simpid] = 1;
             printf("after setting procarray\n");
-            sprintf(strsimpid, "%d", simpid);
+            sprintf(strsimpid, "%i", simpid);
             printf("after setting strsimpid\n");
             for (i = 0; i < 20; i++)
             {

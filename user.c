@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
             if (max_resources(proc_table, current_resources, simpid)) {
                 choose_resource_to_release(current_resources);
                 // release the resource
-            } else if (no_resources()) {
+            } else if (no_resources(current_resources)) {
                 choose_resource_to_request(proc_table, current_resources, simpid);
                 // request the resource
             } else {

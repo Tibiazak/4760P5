@@ -176,7 +176,7 @@ int main(int argc, char * argv[]) {
     int procarray[19];
     int msgerror;
     int allocation_table[19][20];
-    int *proc_max_resources[20];
+    int (*proc_max_resources)[20];
     int resource_table[20];
     int current_resources[20];
 

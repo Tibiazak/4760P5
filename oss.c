@@ -318,11 +318,7 @@ int main(int argc, char * argv[]) {
         perror("Sem_open");
         exit(1);
     }
-    printf("Semaphore created\n");
-    sem_wait(mutex);
-    printf("Inside mutex\n");
-    sem_post(mutex);
-    printf("outside mutex\n");
+
 
     for (i = 0; i < 20; i++)
     {
@@ -387,13 +383,18 @@ int main(int argc, char * argv[]) {
             //print process creation
             fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
             sem_wait(mutex);
+            printf("inside critical section of totalprocs == 0\n");
             if (Clock->nsec + 100 > BILLION)
             {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
-            nextTime = getNextProcTime(Clock);
+            else
+            {
+                Clock->nsec = Clock->nsec + 100;
+            }
             sem_post(mutex);
+            nextTime = getNextProcTime(Clock);
         }
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {

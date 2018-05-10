@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     int current_resources[20];
     int simpid;
     int TableID;
-    bool done = False;
+    bool done = false;
 
     for (i = 0; i < 20; i++)
     {
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     Clock = (struct clock *)shmat(ClockID, NULL, 0);
 
     TableID = shmget(TABLEKEY, sizeof(int[19][20]), 0777);
-    proc_table = shmat(TableID, NULL, 0);
+    proc_table = (int *) shmat(TableID, NULL, 0);
 
     // gets the message queue
     MsgID = msgget(MSGKEY, 0666);

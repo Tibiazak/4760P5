@@ -141,7 +141,6 @@ int main(int argc, char *argv[]) {
     int current_resources[20];
     int simpid = atoi(argv[1]);
     int TableID;
-    bool done = false;
     int resource;
 
     for (i = 0; i < 20; i++)

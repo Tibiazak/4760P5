@@ -124,6 +124,7 @@ int choose_resource_to_request(int table[19][20], int current_resources[20], int
 void do_work()
 {
     // access the clock, increment by WORKCONSTANT
+    printf("User about to do work\n");
     sem_wait(sem_for_mutex);
     if((Clock->nsec + WORKCONSTANT) >= BILLION)
     {
@@ -135,6 +136,7 @@ void do_work()
         Clock->nsec += WORKCONSTANT;
     }
     sem_post(sem_for_mutex);
+    printf("User finished doing work.\n");
 }
 
 

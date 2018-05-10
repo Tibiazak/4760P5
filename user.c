@@ -60,7 +60,6 @@ static void interrupt()
 {
     printf("Received interrupt!\n");
     shmdt(Clock);
-    shmdt(TableID);
     sem_close(mutex);
     exit(1);
 }

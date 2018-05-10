@@ -210,11 +210,14 @@ int main(int argc, char *argv[]) {
                     current_resources[resource]--;
                 }
             }
-            printf("User sending message\n");
+            printf("User %i sending message\n", simpid);
             msgsnd(MsgID, &message, sizeof(message), 0);
-            printf("User about to wait for a message\n");
+            printf("User %i about to wait for a message\n", simpid);
             msgrcv(MsgID, &message, sizeof(message), simpid, 0);
             printf("Message received, continuing.\n");
+            printf("User %i received message from Master intended for %li: ", simpid, message.mtype);
+            printf(message.mtext);
+            printf("\n");
 
 
             // at this point our request was granted, check for termination

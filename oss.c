@@ -48,6 +48,9 @@
 #define MAXCLAIM 3
 #define SEM_NAME "/mutex-semaphore"
 #define MILLISEC 1000000
+#define TERMINATE 1
+#define REQUEST 2
+#define RELEASE 3
 
 // Declare some global variables so that shared memory can be cleaned from the interrupt handler
 int ClockID;
@@ -156,6 +159,19 @@ struct clock getNextProcTime(struct clock *c)
         newClock.nsec = newClock.nsec + nsecs;
     }
     return newClock; // return the new clock object
+}
+
+
+int getSimpid(int procarray[19])
+{
+    int i;
+    for (i = 1; i < 19; i++)
+    {
+        if (procarray[i] == 0)
+        {
+            return i;
+        }
+    }
 }
 
 
@@ -365,6 +381,7 @@ int main(int argc, char * argv[]) {
         if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
             simpid = getSimpid(procarray);
+            procarray[simpid] = 1;
             sprintf(strsimpid, "%d", simpid);
             for (i = 0; i < 20; i++)
             {
@@ -399,6 +416,28 @@ int main(int argc, char * argv[]) {
         if (msgerror != -1)
         {
             // process message
+            strcpy(messageString, message.mtext);
+            temp = strtok(messageString, " ");
+            pid = atoi(temp);
+            temp = strtok(NULL, " ");
+            info = atoi(temp);
+            if (info == TERMINATE)
+            {
+                printf("Process %d with simpid %d is terminating.\n", pid, message.mtype);
+            }
+            else
+            {
+                temp = strtok(NULL, " ");
+                resource = atoi(temp);
+                if (info == REQUEST)
+                {
+                    printf("Process %d with simpid %d is requesting resource %d\n", pid, message.mtype, resource);
+                }
+                else
+                {
+                    printf("Process %d with simpid %d is releasing resource %d\n", pid, message.mtype, resource);
+                }
+            }
         }
     }
 //        // process the message

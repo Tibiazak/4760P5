@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
 
             // at this point our request was granted, check for termination
             if ((rand() % 100) == TERMINATIONCONSTANT) {
-                printf("Time to terminate\n");
+                printf("User: Time to terminate\n");
                 //send termination signal
                 message.mtype = simpid;
                 sprintf(message.mtext, "%d %d", getpid(), TERMINATE);

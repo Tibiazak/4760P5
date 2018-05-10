@@ -176,7 +176,7 @@ int getSimpid(int procarray[19])
 
 
 int main(int argc, char * argv[]) {
-    int i, j, pid, c, status;
+    int i, j, pid, c, status, resource, info;
     int maxprocs = 5;
     int endtime = 20;
     int pr_count = 0;
@@ -423,7 +423,7 @@ int main(int argc, char * argv[]) {
             info = atoi(temp);
             if (info == TERMINATE)
             {
-                printf("Process %d with simpid %d is terminating.\n", pid, message.mtype);
+                printf("Process %d with simpid %l is terminating.\n", pid, message.mtype);
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }
@@ -433,11 +433,11 @@ int main(int argc, char * argv[]) {
                 resource = atoi(temp);
                 if (info == REQUEST)
                 {
-                    printf("Process %d with simpid %d is requesting resource %d\n", pid, message.mtype, resource);
+                    printf("Process %d with simpid %l is requesting resource %d\n", pid, message.mtype, resource);
                 }
                 else
                 {
-                    printf("Process %d with simpid %d is releasing resource %d\n", pid, message.mtype, resource);
+                    printf("Process %d with simpid %l is releasing resource %d\n", pid, message.mtype, resource);
                 }
                 msgsnd(MsgID, &message, sizeof(message), 0);
             }

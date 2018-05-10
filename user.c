@@ -131,12 +131,19 @@ void do_work(sem_t * mutex, struct clock * Clock)
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, interrupt); // registers interrupt handler
     unsigned long x;
+    int i;
     int totalwork;
     int workdone = 0;
     int work;
     int donesec;
     int donensec;
     int *proc_table[20];
+    int current_resources[20];
+
+    for (i = 0; i < 20; i++)
+    {
+        current_resources[i] = 0;
+    }
 
     srand(time(getpid())); // seeds the random number generator
 
@@ -165,19 +172,19 @@ int main(int argc, char *argv[]) {
             // we either request or release resources
             //check if resources are full
             if (max_resources()) {
-                choose_resource_to_release();
+                choose_resource_to_release(current_resources);
                 // release the resource
             } else if (no_resources()) {
-                choose_resource_to_request();
+                choose_resource_to_request(proc_table, current_resources, simpid);
                 // request the resource
             } else {
                 if ((rand() % 2) == 0) {
                     // request a resource
-                    choose_resource_to_request();
+                    choose_resource_to_request(proc_table, current_resources, simpid);
 
                 } else {
                     // release a resource
-                    choose_resource_to_release();
+                    choose_resource_to_request(proc_table, current_resources, simpid);
                 }
             }
 

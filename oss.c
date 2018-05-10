@@ -462,7 +462,7 @@ int main(int argc, char * argv[]) {
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, IPC_NOWAIT);
         if (msgerror != -1)
         {
-            printf("message received from process %li: ", message.type);
+            printf("message received from process %li: ", message.mtype);
             printf(message.mtext);
             printf("\n");
             // process message

@@ -25,6 +25,7 @@
 #include <time.h>
 #include "clock.c"
 #include <semaphore.h>
+#include <stdbool.h>
 
 #define BILLION 1000000000
 #define BOUND 2

@@ -46,6 +46,7 @@
 #define PR_LIMIT 17
 #define MAXCLAIM 3
 #define SEM_NAME "/mutex-semaphore"
+#define MILLISEC 1000000
 
 // Declare some global variables so that shared memory can be cleaned from the interrupt handler
 int ClockID;
@@ -116,15 +117,15 @@ static int setperiodic(double sec)
 
 
 // A function that determines if some target time has passed.
-int hasTimePassed(struct clock current, struct clock dest)
+int hasTimePassed(struct clock *current, struct clock dest)
 {
-    if (dest.sec > current.sec)  // if destination.sec is greater than current.sec, it's definitely later
+    if (dest.sec > current->sec)  // if destination.sec is greater than current.sec, it's definitely later
     {
         return 1;
     }
-    else if (dest.sec == current.sec) // otherwise if the seconds are equal, check the nanoseconds
+    else if (dest.sec == current->sec) // otherwise if the seconds are equal, check the nanoseconds
     {
-        if (dest.nsec >= current.nsec) // if destination ns is greater, it's later
+        if (dest.nsec >= current->nsec) // if destination ns is greater, it's later
         {
             return 1;
         }
@@ -134,8 +135,9 @@ int hasTimePassed(struct clock current, struct clock dest)
 
 
 // A function to get a random time between 0 and 500 milliseconds from now
-struct clock getNextProcTime(struct clock c)
+struct clock getNextProcTime(struct clock *c)
 {
+    uint nsecs;
     // get a random number between 1 and 500 milliseconds
     nsecs = (rand() % (500 * MILLISEC)) + 1;
 

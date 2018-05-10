@@ -462,9 +462,9 @@ int main(int argc, char * argv[]) {
         msgerror = msgrcv(MsgID, &message, sizeof(message), 0, IPC_NOWAIT);
         if (msgerror != -1)
         {
-            printf("message received from process %i: ", message.mtext);
+            printf("message received from process %li: ", message.type);
             printf(message.mtext);
-            printf('\n');
+            printf("\n");
             // process message
             strcpy(messageString, message.mtext);
             temp = strtok(messageString, " ");

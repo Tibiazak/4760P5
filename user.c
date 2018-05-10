@@ -24,6 +24,7 @@
 #include <string.h>
 #include <time.h>
 #include "clock.c"
+#include <semaphore.h>
 
 #define BILLION 1000000000
 #define BOUND 2
@@ -33,10 +34,14 @@
 #define SHAREKEY 92195
 #define MSGKEY 110992
 #define TABLEKEY 210995
+#define SEM_NAME "/mutex-semaphore"
+
 
 int ClockID;
 struct clock *Clock;
 int MsgID;
+
+sem_t *mutex;
 
 struct mesg_buf {
     long mtype;
@@ -107,9 +112,19 @@ int choose_resource_to_request(int table[19][20], int current_resources[20], int
 }
 
 
-void do_work()
+void do_work(sem_t * mutex, struct clock * Clock)
 {
     // access the clock, increment by WORKCONSTANT
+    sem_wait(mutex);
+    if((Clock->nsec + WORKCONSTANT) >= BILLION)
+    {
+        Clock->sec++;
+        Clock->nsec = Clock->nsec + WORKCONSTANT - BILLION;
+    }
+    else
+    {
+        Clock->nsec += WORKCONSTANT;
+    }
 }
 
 
@@ -135,46 +150,12 @@ int main(int argc, char *argv[]) {
     // gets the message queue
     MsgID = msgget(MSGKEY, 0666);
 
-//    // main loop: while we still have work to do, loop.
-//    // wait til we can get in the critical section
-//    // once in, generate a random amount of work done, and add it to the clock.
-//    // If we generate more work than the total we're supposed to do, only do up to totalwork
-//    // send a message to the queue allowing another process to get in.
-//    while(workdone < totalwork)
-//    {
-//        // get permission to enter the critical section
-//        msgrcv(MsgID, &message, sizeof(message), 3, 0);
-//
-//        // generate a random amount of work to do this iteration and ensure its not too much work.
-//        work = rand();
-//        if((work + workdone) > totalwork)
-//        {
-//            work = totalwork - workdone;
-//        }
-//
-//        // add the work we're doing to the clock.
-//        Clock->nsec += work;
-//
-//        // if we have a billion nanoseconds, convert to seconds
-//        if(Clock->nsec >= BILLION)
-//        {
-//            Clock->sec++;
-//            Clock->nsec -= BILLION;
-//        }
-//
-//        // add the work we just did to our total work done
-//        workdone += work;
-//
-//        // save the current clock time (so we have it when we terminate)
-//        donensec = Clock->nsec;
-//        donesec = Clock->sec;
-//
-//        // send a message allowing another process to enter the critical section
-//        message.mtype = 3;
-//        msgsnd(MsgID, &message, sizeof(message), 0);
-//    }
-//
-//    // send the terminating message to OSS
+    if((mutex = sem_open(SEM_NAME, 0)) == SEM_FAILED)
+    {
+        perror("user sem_open");
+        exit(1);
+    }
+
 //    message.mtype = 2;
 //    sprintf(message.mtext, "%d %d %d %d", getpid(), donesec, donensec, totalwork);
 //    msgsnd(MsgID, &message, sizeof(message), 0);
@@ -209,7 +190,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        do_work();
+        do_work(mutex, Clock);
     }
 
     // detach shared memory and terminate

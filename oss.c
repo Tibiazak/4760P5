@@ -35,6 +35,7 @@
 #include <string.h>
 #include "clock.c"
 #include <stdbool.h>
+#include <semaphore.h>
 
 
 #define SHAREKEY 92195
@@ -44,6 +45,7 @@
 #define BILLION 1000000000
 #define PR_LIMIT 17
 #define MAXCLAIM 3
+#define SEM_NAME "/mutex-semaphore"
 
 // Declare some global variables so that shared memory can be cleaned from the interrupt handler
 int ClockID;
@@ -51,6 +53,7 @@ struct clock *Clock;
 int MsgID;
 int ProcTableID;
 FILE *fp;
+sem_t *mutex;
 
 struct clock endclocktime;
 
@@ -284,6 +287,12 @@ int main(int argc, char * argv[]) {
     }
 
     proc_max_resources = shmat(ProcTableID, 0, 0);
+
+    if ((mutex = sem_open(SEM_NAME, O_CREAT, 0660, 1)) == SEM_FAILED)
+    {
+        perror("Sem_open");
+        exit(1);
+    }
 
     for (i = 0; i < 20; i++)
     {

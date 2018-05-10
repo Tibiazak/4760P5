@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
 
     TableID = shmget(TABLEKEY, sizeof(int[19][20]), 0777);
     proc_table = shmat(TableID, NULL, 0);
+    proc_table = shmat(TableID, NULL, 0);
 
     // gets the message queue
     MsgID = msgget(MSGKEY, 0666);

@@ -121,7 +121,7 @@ int choose_resource_to_request(int table[19][20], int current_resources[20], int
 }
 
 
-void do_work(sem_t * mutex, struct clock * Clock)
+void do_work()
 {
     // access the clock, increment by WORKCONSTANT
     sem_wait(mutex);
@@ -228,6 +228,6 @@ int main(int argc, char *argv[]) {
                 exit(0);
             }
         }
-        do_work(mutex, Clock);
+        do_work();
     }
 }

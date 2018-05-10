@@ -340,7 +340,7 @@ int main(int argc, char * argv[]) {
                 proc_max_resources[1][i] = rand() % MAXCLAIM;
             }
 
-            char * argarray = {"./user", simpid, NULL};
+            char * argarray[] = {"./user", simpid, NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");
@@ -364,7 +364,7 @@ int main(int argc, char * argv[]) {
             }
             nextTime = getNextProcTime(Clock);
         }
-        if (hasTimePassed(*Clock, nextTime) && (totalprocs < 18))
+        if (hasTimePassed(Clock, nextTime) && (totalprocs < 18))
         {
             simpid = getSimpid(procarray);
             for (i = 0; i < 20; i++)
@@ -372,7 +372,7 @@ int main(int argc, char * argv[]) {
                 proc_max_resources[simpid][i] = rand() % MAXCLAIM;
             }
 
-            char * argarray = {"./user", simpid, NULL};
+            char * argarray[] = {"./user", simpid, NULL};
             if ((pid = fork()) < 0)
             {
                 perror("Fork failed!");

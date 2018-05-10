@@ -381,6 +381,7 @@ int main(int argc, char * argv[]) {
                 exit(1);
             }
             totalprocs += 1;
+            fprintf(fp, "total procs: %d", totalprocs);
             if(pid == 0)
             {
                 if(execvp(argarray[0], argarray) < 0)
@@ -474,6 +475,7 @@ int main(int argc, char * argv[]) {
                 }
                 procarray[message.mtype] = 0;
                 totalprocs -= 1;
+                fprintf(fp, "Totalprocs %d", totalprocs);
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }

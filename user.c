@@ -61,6 +61,7 @@ static void interrupt()
 
 int max_resources(int table[19][20], int current_resources[20], int simpid)
 {
+    int i;
     for(i = 0; i < 20; i++)
     {
         if (table[simpid][i] != current_resources[i])
@@ -74,6 +75,7 @@ int max_resources(int table[19][20], int current_resources[20], int simpid)
 
 int no_resources(int current_resources[20])
 {
+    int i;
     for(i = 0; i < 20; i++)
     {
         if(current_resources[i] > 0)

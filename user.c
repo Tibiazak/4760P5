@@ -188,19 +188,23 @@ int main(int argc, char *argv[]) {
                 resource = choose_resource_to_release(current_resources);
                 // release the resource
                 sprintf(message.mtext, "%d %d %d", getpid(), RELEASE, resource);
+                current_resources[resource]--;
             } else if (no_resources(current_resources)) {
                 resource = choose_resource_to_request(proc_table, current_resources, simpid);
                 // request the resource
                 sprintf(message.mtext, "%d %d %d", getpid(), REQUEST, resource);
+                current_resources[resource]++;
             } else {
                 if ((rand() % 2) == 0) {
                     // request a resource
                     resource = choose_resource_to_request(proc_table, current_resources, simpid);
                     sprintf(message.mtext, "%d %d %d", getpid(), REQUEST, resource);
+                    current_resources[resource]++;
                 } else {
                     // release a resource
                     resource = choose_resource_to_request(proc_table, current_resources, simpid);
                     sprintf(message.mtext, "%d %d %d", getpid(), RELEASE, resource);
+                    current_resources[resource]--;
                 }
             }
             printf("User sending message\n");

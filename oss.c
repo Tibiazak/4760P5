@@ -418,8 +418,11 @@ int main(int argc, char * argv[]) {
                 printf("getSimPid returned error\n");
                 exit(1);
             }
+            printf("Made it through getSimpid\n");
             procarray[simpid] = 1;
+            printf("after setting procarray\n");
             sprintf(strsimpid, "%d", simpid);
+            printf("after setting strsimpid\n");
             for (i = 0; i < 20; i++)
             {
                 proc_max_resources[simpid][i] = rand() % MAXCLAIM;

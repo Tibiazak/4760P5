@@ -1,6 +1,6 @@
 /*
  * Joshua Bearden
- * CS4760 Project 3
+ * CS4760 Project 5
  *
  * This program is designed to be executed by OSS. It simulates a user process that will read a clock within a
  * mutually exclusive critical section (utilizing message queues), add an amount of "work done" to the clock,
@@ -30,12 +30,15 @@
 #define BILLION 1000000000
 #define BOUND 2
 #define UPPERBOUND 3
-#define TERMINATION 1
+#define TERMINATIONCONSTANT 1
 #define WORKCONSTANT 100
 #define SHAREKEY 92195
 #define MSGKEY 110992
 #define TABLEKEY 210995
 #define SEM_NAME "/mutex-semaphore"
+#define TERMINATE 1
+#define REQUEST 2
+#define RELEASE 3
 
 
 int ClockID;
@@ -145,6 +148,7 @@ int main(int argc, char *argv[]) {
     int simpid = argv[1];
     int TableID;
     bool done = false;
+    int resource;
 
     for (i = 0; i < 20; i++)
     {
@@ -177,32 +181,42 @@ int main(int argc, char *argv[]) {
         if ((rand() % UPPERBOUND) > BOUND) {
             // we either request or release resources
             //check if resources are full
+            message.mtype = simpid;
             if (max_resources(proc_table, current_resources, simpid)) {
-                choose_resource_to_release(current_resources);
+                resource = choose_resource_to_release(current_resources);
                 // release the resource
+                sprintf(message.mtext, "%d %d %d", getpid(), RELEASE, resource);
             } else if (no_resources(current_resources)) {
-                choose_resource_to_request(proc_table, current_resources, simpid);
+                resource = choose_resource_to_request(proc_table, current_resources, simpid);
                 // request the resource
+                sprintf(message.mtext, "%d %d %d", getpid(), REQUEST, resource);
             } else {
                 if ((rand() % 2) == 0) {
                     // request a resource
-                    choose_resource_to_request(proc_table, current_resources, simpid);
-
+                    resource = choose_resource_to_request(proc_table, current_resources, simpid);
+                    sprintf(message.mtext, "%d %d %d", getpid(), REQUEST, resource);
                 } else {
                     // release a resource
-                    choose_resource_to_request(proc_table, current_resources, simpid);
+                    resource = choose_resource_to_request(proc_table, current_resources, simpid);
+                    sprintf(message.mtext, "%d %d %d", getpid(), RELEASE, resource);
                 }
             }
+            msgsnd(MsgID, &message, sizeof(message), 0);
+            msgrcv(MsgID, &message, sizeof(message), simpid, 1);
+
 
             // at this point our request was granted, check for termination
-            if ((rand() % 100) == TERMINATION) {
+            if ((rand() % 100) == TERMINATIONCONSTANT) {
                 //send termination signal
+                message.mtype = simpid;
+                sprintf(message.mtext, "%d %d", getpid(), TERMINATE);
+                msgsnd(MsgID, &message, sizeof(message), 0);
+                msgrcv(MsgID, &message, sizeof(message), simpid, 1);
                 shmdt(Clock);
                 shmdt(proc_table);
                 exit(0);
             }
         }
-
         do_work(mutex, Clock);
     }
 }

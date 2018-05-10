@@ -318,6 +318,11 @@ int main(int argc, char * argv[]) {
         perror("Sem_open");
         exit(1);
     }
+    printf("Semaphore created\n");
+    sem_wait(mutex);
+    printf("Inside mutex\n");
+    sem_post(mutex);
+    printf("outside mutex\n");
 
     for (i = 0; i < 20; i++)
     {

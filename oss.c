@@ -447,17 +447,22 @@ int main(int argc, char * argv[]) {
             //print process creation
             if(linecount < LINELIMIT)
             {
+                printf("Linecount < LINELIMIT, about to enter critical section\n");
                 sem_wait(mutex);
+                printf("in critical section\n");
                 fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+                printf("About to leave critical section\n");
                 sem_post(mutex);
                 linecount++;
             }
+            printf("About to enter critical section to increment clock\n");
             sem_wait(mutex);
             if (Clock->nsec + 100 > BILLION)
             {
                 Clock->sec++;
                 Clock->nsec = Clock->nsec + 100 - BILLION;
             }
+            printf("leaving critical section\n");
             sem_post(mutex);
             nextTime = getNextProcTime(Clock);
             printf("The next clock time to fork a process is %d:%d", nextTime.sec, nextTime.nsec);

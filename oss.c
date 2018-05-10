@@ -48,6 +48,7 @@
 #define MAXCLAIM 3
 #define SEM_NAME "/mutex-semaphore"
 #define MILLISEC 1000000
+#define LINELIMIT 100000
 #define TERMINATE 1
 #define REQUEST 2
 #define RELEASE 3
@@ -185,6 +186,7 @@ int getSimpid(int procarray[19])
 
 int main(int argc, char * argv[]) {
     int i, j, pid, c, status, resource, info;
+    int linecount = 0;
     int maxprocs = 5;
     int endtime = 20;
     int pr_count = 0;
@@ -381,7 +383,11 @@ int main(int argc, char * argv[]) {
                 }
             }
             //print process creation
-            fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            if(linecount < LINELIMIT)
+            {
+                fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+                linecount++;
+            }
             sem_wait(mutex);
             printf("inside critical section of totalprocs == 0\n");
             if (Clock->nsec + 100 > BILLION)
@@ -427,7 +433,11 @@ int main(int argc, char * argv[]) {
                 }
             }
             //print process creation
-            fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+            if(linecount < LINELIMIT)
+            {
+                fprintf(fp, "Master: Creating child process %d at my time %d.%d\n", pid, Clock->sec, Clock->nsec);
+                linecount++;
+            }
             sem_wait(mutex);
             if (Clock->nsec + 100 > BILLION)
             {
@@ -450,7 +460,11 @@ int main(int argc, char * argv[]) {
             info = atoi(temp);
             if (info == TERMINATE)
             {
-                fprintf(fp, "Process %d with simpid %ld is terminating.\n", pid, message.mtype);
+                if(linecount < LINELIMIT)
+                {
+                    fprintf(fp, "Process %d with simpid %ld is terminating.\n", pid, message.mtype);
+                    linecount++;
+                }
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }
@@ -458,13 +472,16 @@ int main(int argc, char * argv[]) {
             {
                 temp = strtok(NULL, " ");
                 resource = atoi(temp);
-                if (info == REQUEST)
-                {
-                    fprintf(fp, "Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
-                }
-                else
-                {
-                    fprintf(fp, "Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
+                if(linecount < LINELIMIT) {
+                    if (info == REQUEST) {
+                        fprintf(fp, "Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype,
+                                resource);
+                        linecount++;
+                    } else {
+                        fprintf(fp, "Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype,
+                                resource);
+                        linecount++;
+                    }
                 }
                 msgsnd(MsgID, &message, sizeof(message), 0);
             }

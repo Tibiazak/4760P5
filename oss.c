@@ -423,7 +423,7 @@ int main(int argc, char * argv[]) {
             info = atoi(temp);
             if (info == TERMINATE)
             {
-                printf("Process %d with simpid %l is terminating.\n", pid, message.mtype);
+                printf("Process %d with simpid %ld is terminating.\n", pid, message.mtype);
                 msgsnd(MsgID, &message, sizeof(message), 0);
                 waitpid(pid, &status, 0);
             }
@@ -433,11 +433,11 @@ int main(int argc, char * argv[]) {
                 resource = atoi(temp);
                 if (info == REQUEST)
                 {
-                    printf("Process %d with simpid %l is requesting resource %d\n", pid, message.mtype, resource);
+                    printf("Process %d with simpid %ld is requesting resource %d\n", pid, message.mtype, resource);
                 }
                 else
                 {
-                    printf("Process %d with simpid %l is releasing resource %d\n", pid, message.mtype, resource);
+                    printf("Process %d with simpid %ld is releasing resource %d\n", pid, message.mtype, resource);
                 }
                 msgsnd(MsgID, &message, sizeof(message), 0);
             }
